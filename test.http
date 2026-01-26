@@ -1,3 +1,25 @@
+POST http://localhost:5000/api/team/69765b51a4985fa7c77bda00/add-member
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NzU4OTM2MDAyOTNjYmUyNjc3NDI5YSIsImlhdCI6MTc2OTM5NjQxNSwiZXhwIjoxNzcwMDAxMjE1fQ.ONE9W1gOHGpmtlBTp4PZmyglv5yK8gNlhzUTvK_20-A
+
+{
+  "email": "alice.johnson@example.com"
+}
+
+
+
+### REMOVE MEMBER
+DELETE http://localhost:5000/api/team/69765b51a4985fa7c77bda00/remove-member
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NzU4OTM2MDAyOTNjYmUyNjc3NDI5YSIsImlhdCI6MTc2OTQwMDEwOCwiZXhwIjoxNzcwMDA0OTA4fQ.w6r3I_b0_ZBrcvDGslyzA468Xc08jFZSI0eeZSpOMhk
+
+{
+  "email": "alice.johnson@example.com"
+}
+
+
+
+### LOGIN USER
 POST http://localhost:5000/api/auth/login
 Content-Type: application/json
 
@@ -5,3 +27,9 @@ Content-Type: application/json
   "email": "test@example.com",
   "password": "123456"
 }
+
+
+
+### DELETE TEAM
+DELETE http://localhost:5000/api/team/69765b51a4985fa7c77bda00
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NzU4OTM2MDAyOTNjYmUyNjc3NDI5YSIsImlhdCI6MTc2OTQwMTA1OSwiZXhwIjoxNzcwMDA1ODU5fQ.5mRBzPEmrGEoePqyDQs3CVr2eNwP7NCkApmbMpIMdtY
