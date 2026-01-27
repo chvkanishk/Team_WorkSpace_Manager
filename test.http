@@ -1,6 +1,6 @@
-POST http://localhost:5000/api/team/69765b51a4985fa7c77bda00/add-member
+POST http://localhost:5000/api/team/6977d62d59c4977cb4a661f1/add-member
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NzU4OTM2MDAyOTNjYmUyNjc3NDI5YSIsImlhdCI6MTc2OTM5NjQxNSwiZXhwIjoxNzcwMDAxMjE1fQ.ONE9W1gOHGpmtlBTp4PZmyglv5yK8gNlhzUTvK_20-A
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NzU4OTM2MDAyOTNjYmUyNjc3NDI5YSIsImlhdCI6MTc2OTU0OTIzOSwiZXhwIjoxNzcwMTU0MDM5fQ.BiJazesc82Bq1mSftDRziBhXpIBXLbWJifPg2AM4EXQ
 
 {
   "email": "alice.johnson@example.com"
@@ -33,3 +33,27 @@ Content-Type: application/json
 ### DELETE TEAM
 DELETE http://localhost:5000/api/team/69765b51a4985fa7c77bda00
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NzU4OTM2MDAyOTNjYmUyNjc3NDI5YSIsImlhdCI6MTc2OTQwMTA1OSwiZXhwIjoxNzcwMDA1ODU5fQ.5mRBzPEmrGEoePqyDQs3CVr2eNwP7NCkApmbMpIMdtY
+
+
+
+
+
+### CREATE TEAM
+POST http://localhost:5000/api/team/create
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NzU4OTM2MDAyOTNjYmUyNjc3NDI5YSIsImlhdCI6MTc2OTQ2MTE0NSwiZXhwIjoxNzcwMDY1OTQ1fQ.hRfBgx-rLi6Ol-4IxafMW1JlFtAvf7UVxQo-fcPixwM
+
+{
+  "name": "Design Team"
+}
+
+
+
+### TRANSFER OWNERSHIP
+PUT http://localhost:5000/api/team/6977d62d59c4977cb4a661f1/transfer-ownership
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NzU4OTM2MDAyOTNjYmUyNjc3NDI5YSIsImlhdCI6MTc2OTU0OTIzOSwiZXhwIjoxNzcwMTU0MDM5fQ.BiJazesc82Bq1mSftDRziBhXpIBXLbWJifPg2AM4EXQ
+
+{
+  "email": "alice.johnson@example.com"
+}

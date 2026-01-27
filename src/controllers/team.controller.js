@@ -126,11 +126,43 @@ const getMyTeams = async (req, res) => {
   }
 };
 
+// Transfer ownership
+const transferOwnership = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const { email } = req.body;
+
+    const team = await Team.findById(teamId);
+    if (!team) return res.status(404).json({ message: 'Team not found' });
+
+    if (team.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Only the owner can transfer ownership' });
+    }
+
+    const newOwner = await User.findOne({ email });
+    if (!newOwner) return res.status(404).json({ message: 'User not found' });
+
+    if (!team.members.includes(newOwner._id)) {
+      return res.status(400).json({ message: 'User must be a member to become owner' });
+    }
+
+    team.owner = newOwner._id;
+    await team.save();
+
+    res.json({ message: 'Ownership transferred successfully', team });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 
 module.exports = {
   createTeam,
   addMember,
   getMyTeams,
   removeMember,
-  deleteTeam
+  deleteTeam,
+  transferOwnership
 };
+
