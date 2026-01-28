@@ -308,6 +308,179 @@ const getActivityLogs = async (req, res) => {
   }
 };
 
+// Send Invite
+const Invite = require('../models/invite.model');
+
+const sendInvite = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const { email } = req.body;
+
+    const team = await Team.findById(teamId);
+    if (!team) return res.status(404).json({ message: 'Team not found' });
+
+    // Check if already a member
+    const alreadyMember = team.members.some(
+      m => m.user.toString() === req.user._id.toString()
+    );
+
+    // Check if invite already exists
+    const existingInvite = await Invite.findOne({ team: teamId, email, status: 'pending' });
+    if (existingInvite) {
+      return res.status(400).json({ message: 'Invite already sent' });
+    }
+
+    const invite = await Invite.create({
+      team: teamId,
+      email,
+      invitedBy: req.user._id
+    });
+
+    await logActivity(teamId, req.user._id, 'SEND_INVITE', { email });
+
+    res.json({ message: 'Invite sent', invite });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Accept Invite 
+const acceptInvite = async (req, res) => {
+  try {
+    const { inviteId } = req.params;
+
+    const invite = await Invite.findById(inviteId);
+    if (!invite) return res.status(404).json({ message: 'Invite not found' });
+
+    if (invite.status !== 'pending') {
+      return res.status(400).json({ message: 'Invite already processed' });
+    }
+
+    // Only the invited user can accept
+    if (invite.email !== req.user.email) {
+      return res.status(403).json({ message: 'You cannot accept this invite' });
+    }
+
+    const team = await Team.findById(invite.team);
+    if (!team) return res.status(404).json({ message: 'Team not found' });
+
+    // Add user as member
+    team.members.push({
+      user: req.user._id,
+      role: 'member'
+    });
+
+    await team.save();
+
+    invite.status = 'accepted';
+    await invite.save();
+
+    await logActivity(team._id, req.user._id, 'ACCEPT_INVITE');
+
+    res.json({ message: 'Invite accepted', team });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+//Decline Invite
+const declineInvite = async (req, res) => {
+  try {
+    const { inviteId } = req.params;
+
+    const invite = await Invite.findById(inviteId);
+    if (!invite) return res.status(404).json({ message: 'Invite not found' });
+
+    if (invite.status !== 'pending') {
+      return res.status(400).json({ message: 'Invite already processed' });
+    }
+
+    // Only the invited user can decline
+    if (invite.email !== req.user.email) {
+      return res.status(403).json({ message: 'You cannot decline this invite' });
+    }
+
+    invite.status = 'declined';
+    await invite.save();
+
+    await logActivity(invite.team, req.user._id, 'DECLINE_INVITE');
+
+    res.json({ message: 'Invite declined' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//Cancel Invite
+const cancelInvite = async (req, res) => {
+  try {
+    const { inviteId } = req.params;
+
+    const invite = await Invite.findById(inviteId);
+    if (!invite) return res.status(404).json({ message: 'Invite not found' });
+
+    const team = await Team.findById(invite.team);
+    if (!team) return res.status(404).json({ message: 'Team not found' });
+
+    // Only owner/admin can cancel
+    const member = team.members.find(
+      m => m.user.toString() === req.user._id.toString()
+    );
+
+    if (!member || !['owner', 'admin'].includes(member.role)) {
+      return res.status(403).json({ message: 'Not allowed to cancel invites' });
+    }
+
+    if (invite.status !== 'pending') {
+      return res.status(400).json({ message: 'Invite already processed' });
+    }
+
+    invite.status = 'cancelled';
+    await invite.save();
+
+    await logActivity(team._id, req.user._id, 'CANCEL_INVITE', {
+      email: invite.email
+    });
+
+    res.json({ message: 'Invite cancelled' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//List Pending Invites
+
+const getTeamInvites = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+
+    const invites = await Invite.find({
+      team: teamId,
+      status: 'pending'
+    }).sort({ createdAt: -1 });
+
+    res.json(invites);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//List my invites 
+const getMyInvites = async (req, res) => {
+  try {
+    const invites = await Invite.find({
+      email: req.user.email,
+      status: 'pending'
+    })
+      .populate('team', 'name')
+      .sort({ createdAt: -1 });
+
+    res.json(invites);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 
 module.exports = {
@@ -319,8 +492,13 @@ module.exports = {
   transferOwnership,
   promoteToAdmin,
   demoteAdmin,
-  getActivityLogs
-
+  getActivityLogs,
+  sendInvite,
+  declineInvite,
+  cancelInvite,
+  getTeamInvites,
+  getMyInvites,
+  acceptInvite
 };
 
 
