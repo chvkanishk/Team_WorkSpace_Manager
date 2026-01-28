@@ -62,3 +62,33 @@ Built with **Node.js**, **Express**, and **MongoDB**.
 
 ## 🗂️ Project Structure
 
+src/
+controllers/
+middleware/
+models/
+routes/
+utils/
+server.js
+
+
+---
+
+## 🛠️ Tech Stack
+
+- Node.js  
+- Express.js  
+- MongoDB + Mongoose  
+- JWT Authentication  
+- BCrypt  
+- REST API Architecture  
+
+---
+
+## 📦 Installation
+
+```bash
+git clone <your-repo-url>
+cd project-folder
+npm install
+
+
