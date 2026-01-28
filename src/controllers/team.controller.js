@@ -1,5 +1,7 @@
 const Team = require('../models/team.model');
 const User = require('../models/user.model');
+const logActivity = require('../utils/logActivity');
+
 
 // Create team
 const createTeam = async (req, res) => {
@@ -16,6 +18,9 @@ const createTeam = async (req, res) => {
         }
       ]
     });
+    await logActivity(team._id, req.user._id, 'CREATE_TEAM', {
+    teamName: name
+  });
 
     res.status(201).json(team);
   } catch (error) {
@@ -50,6 +55,10 @@ const addMember = async (req, res) => {
     });
 
     await team.save();
+    await logActivity(team._id, req.user._id, 'ADD_MEMBER', {
+    addedUser: userToAdd._id
+    });
+
 
     res.json({ message: 'Member added successfully', team });
   } catch (error) {
@@ -81,6 +90,10 @@ const removeMember = async (req, res) => {
     );
 
     await team.save();
+    await logActivity(team._id, req.user._id, 'REMOVE_MEMBER', {
+    removedUser: userToRemove._id
+  });
+
 
     res.json({ message: 'Member removed successfully', team });
   } catch (error) {
@@ -106,6 +119,9 @@ const deleteTeam = async (req, res) => {
     // Delete team
     await Team.findByIdAndDelete(teamId);
 
+    await logActivity(team._id, req.user._id, 'DELETE_TEAM');
+
+
     res.json({ message: 'Team deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -118,14 +134,17 @@ const deleteTeam = async (req, res) => {
 const getMyTeams = async (req, res) => {
   try {
     const teams = await Team.find({
-      members: req.user._id,
-    }).populate('owner', 'name email');
+      "members.user": req.user._id
+    })
+    .populate("owner", "name email")
+    .populate("members.user", "name email");
 
     res.json({ teams });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Transfer ownership
 const transferOwnership = async (req, res) => {
@@ -167,6 +186,11 @@ const transferOwnership = async (req, res) => {
     team.owner = newOwner._id;
 
     await team.save();
+
+    await logActivity(team._id, req.user._id, 'TRANSFER_OWNERSHIP', {
+    newOwner: newOwner._id
+    });
+
 
     res.json({ message: 'Ownership transferred successfully', team });
   } catch (error) {
@@ -211,6 +235,10 @@ const promoteToAdmin = async (req, res) => {
     member.role = 'admin';
     await team.save();
 
+    await logActivity(team._id, req.user._id, 'PROMOTE_ADMIN', {
+      promotedUser: user._id
+    });
+
     res.json({ message: 'User promoted to admin', team });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -254,12 +282,31 @@ const demoteAdmin = async (req, res) => {
     member.role = 'member';
     await team.save();
 
+    await logActivity(team._id, req.user._id, 'DEMOTE_ADMIN', {
+      demotedUser: user._id
+    });
+
     res.json({ message: 'Admin demoted to member', team });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+const ActivityLog = require('../models/activityLog.model');
+
+const getActivityLogs = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+
+    const logs = await ActivityLog.find({ team: teamId })
+      .populate('user', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.json(logs);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 
 
@@ -271,7 +318,9 @@ module.exports = {
   deleteTeam,
   transferOwnership,
   promoteToAdmin,
-  demoteAdmin
+  demoteAdmin,
+  getActivityLogs
+
 };
 
 
