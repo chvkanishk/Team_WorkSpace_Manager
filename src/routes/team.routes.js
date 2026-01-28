@@ -7,15 +7,21 @@ const {
   getMyTeams,
   removeMember,
   deleteTeam,
-  transferOwnership
+  transferOwnership,
+  promoteToAdmin,
+  demoteAdmin
 } = require('../controllers/team.controller');
 
+
 router.post('/create', protect, createTeam);
-router.post('/:teamId/add-member', protect, addMember);
+router.post('/:teamId/add-member', protect, authorizeRole('owner', 'admin'), addMember);
 router.get('/my-teams', protect, getMyTeams);
-router.delete('/:teamId/remove-member', protect, removeMember);
-router.delete('/:teamId', protect, deleteTeam);
-router.put('/:teamId/transfer-ownership', protect, transferOwnership);
+router.delete('/:teamId/remove-member', protect, authorizeRole('owner', 'admin'), removeMember);
+router.delete('/:teamId', protect, authorizeRole('owner'), deleteTeam);
+router.put('/:teamId/transfer-ownership', protect, authorizeRole('owner'), transferOwnership);
+router.put('/:teamId/promote', protect, authorizeRole('owner'), promoteToAdmin);
+router.put('/:teamId/demote', protect, authorizeRole('owner'), demoteAdmin);
+router.post('/:teamId/remove-member', protect, authorizeRole('owner', 'admin'), removeMember);
 
 
 module.exports = router;
