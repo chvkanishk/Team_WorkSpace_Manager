@@ -482,6 +482,111 @@ const getMyInvites = async (req, res) => {
   }
 };
 
+// Active log Filtering 
+const ActivityLog = require('../models/activityLog.model');
+
+const getFilteredActivityLogs = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const { action, user, startDate, endDate, page = 1, limit = 20 } = req.query;
+
+    const filter = { team: teamId };
+
+    // Filter by action
+    if (action) {
+      filter.action = action;
+    }
+
+    // Filter by user
+    if (user) {
+      filter.user = user;
+    }
+
+    // Filter by date range
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) filter.createdAt.$gte = new Date(startDate);
+      if (endDate) filter.createdAt.$lte = new Date(endDate);
+    }
+
+    const skip = (page - 1) * limit;
+
+    const logs = await ActivityLog.find(filter)
+      .populate('user', 'name email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    const total = await ActivityLog.countDocuments(filter);
+
+    res.json({
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / limit),
+      logs
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Update team setting 
+
+const updateTeamSettings = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const { description, avatar, visibility, tags } = req.body;
+
+    const team = await Team.findById(teamId);
+    if (!team) return res.status(404).json({ message: "Team not found" });
+
+    // Only owner/admin can update settings
+    const member = team.members.find(
+      m => m.user.toString() === req.user._id.toString()
+    );
+
+    if (!member || !["owner", "admin"].includes(member.role)) {
+      return res.status(403).json({ message: "Not allowed to update settings" });
+    }
+
+    // Apply updates
+    if (description !== undefined) team.description = description;
+    if (avatar !== undefined) team.avatar = avatar;
+    if (visibility !== undefined) team.visibility = visibility;
+    if (tags !== undefined) team.tags = tags;
+
+    await team.save();
+
+    await logActivity(team._id, req.user._id, "UPDATE_SETTINGS", {
+      description,
+      avatar,
+      visibility,
+      tags
+    });
+
+    res.json({ message: "Team settings updated", team });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// get team settings
+const getTeamSettings = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+
+    const team = await Team.findById(teamId).select(
+      "name description avatar visibility tags owner members"
+    );
+
+    if (!team) return res.status(404).json({ message: "Team not found" });
+
+    res.json(team);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 module.exports = {
   createTeam,
@@ -498,7 +603,10 @@ module.exports = {
   cancelInvite,
   getTeamInvites,
   getMyInvites,
-  acceptInvite
+  acceptInvite,
+  getFilteredActivityLogs,
+  updateTeamSettings,
+  getTeamSettings
 };
 
 

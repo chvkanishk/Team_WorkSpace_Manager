@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 
 const teamSchema = new mongoose.Schema(
   {
+    description: { type: String, default: "" },
+    avatar: { type: String, default: "" },
+    visibility: { type: String, enum: ["private", "public"], default: "private" },
+    tags: { type: [String], default: [] },
+
     name: {
       type: String,
       required: true,

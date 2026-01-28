@@ -32,6 +32,15 @@ router.post('/invite/:inviteId/cancel', protect, authorizeRole('owner', 'admin')
 
 router.get('/:teamId/invites', protect, authorizeRole('owner', 'admin'), getTeamInvites);
 router.get('/my/invites', protect, getMyInvites);
+router.get('/:teamId/logs', protect, authorizeRole('owner', 'admin'), getActivityLogs);
+router.get('/:teamId/settings', protect, getTeamSettings);
+
+router.put(
+  '/:teamId/settings',
+  protect,
+  authorizeRole('owner', 'admin'),
+  updateTeamSettings
+);
 
 
 module.exports = router;
